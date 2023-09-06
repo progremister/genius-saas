@@ -19,9 +19,14 @@ import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/UserAvatar";
 import { BotAvatar } from "@/components/BotAvatar";
 
+interface Message {
+  role: string;
+  content?: string;
+}
+
 const ConversationPage = () => {
   const router = useRouter();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,10 +38,8 @@ const ConversationPage = () => {
   const isLoading = form.formState.isSubmitting;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Submit!");
-
     try {
-      const userMessage = {
+      const userMessage: Message = {
         role: "user",
         content: values.prompt,
       };
@@ -45,8 +48,13 @@ const ConversationPage = () => {
       const response = await axios.post("/api/conversation", {
         messages: newMessages,
       });
-      setMessages((current) => [...current, response.data, userMessage]);
 
+      const botMessage: Message = {
+        role: "bot",
+        content: response.data,
+      };
+
+      setMessages((current) => [...current, botMessage, userMessage]);
       form.reset();
     } catch (error: any) {
       console.error(error);
@@ -118,9 +126,9 @@ const ConversationPage = () => {
             <Empty label="No conversation started." />
           )}
           <div className="flex flex-col-reverse gap-y-4">
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <div
-                key={message.content}
+                key={index}
                 className={cn(
                   "p-8 w-full flex items-start gap-x-8 rounded-lg",
                   message.role === "user"
