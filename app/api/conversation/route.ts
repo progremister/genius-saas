@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
+import { Message } from "@/app/(dashboard)/(routes)/conversation/constants";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -10,7 +12,7 @@ export async function POST(req: Request) {
   try {
     const { userId } = auth();
     const body = await req.json();
-    const { messages } = body;
+    const { messages }: { messages: Message[] } = body;
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -40,7 +42,7 @@ export async function POST(req: Request) {
         status: 500,
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("[CONVERSATION_ERROR]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
